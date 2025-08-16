@@ -97,7 +97,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 18px;
             transition: all 0.3s ease;
             color: var(--text-primary);
             line-height: 0;
@@ -635,7 +635,7 @@
 
         .toast {
             position: fixed;
-            bottom: 100px;
+            bottom: 105px;
             right: 30px;
             background: #000000;
             color: white;
@@ -690,7 +690,7 @@
         <div class="container">
             <div class="header-title">
                 <h1>aespa photocard database</h1>
-                <button class="collapse-btn" id="collapseBtn" title="toggle header">⌄</button>
+                <button class="collapse-btn" id="collapseBtn" title="toggle header">🡩</button>
             </div>
             <div class="header-content" id="headerContent">
                 <div class="controls">
@@ -1263,11 +1263,11 @@
             header.classList.toggle('collapsed');
             
             if (header.classList.contains('collapsed')) {
-                collapseBtn.innerHTML = '⌄';
+                collapseBtn.innerHTML = '🡫';
                 collapseBtn.title = 'expand header';
                 showToast('header collapsed!');
             } else {
-                collapseBtn.innerHTML = '⌃';
+                collapseBtn.innerHTML = '🡩';
                 collapseBtn.title = 'collapse header';
                 showToast('header expanded!');
             }
