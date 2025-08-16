@@ -19,7 +19,6 @@
             transition: all 0.3s ease;
         }
 
-        /* Light theme variables */
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f8f8f8;
@@ -35,7 +34,6 @@
             --shadow-hover: rgba(0, 0, 0, 0.2);
         }
 
-        /* Dark theme variables */
         [data-theme="dark"] {
             --bg-primary: #0a0a0a;
             --bg-secondary: #1a1a1a;
@@ -124,7 +122,6 @@
             color: var(--bg-primary);
         }
 
-        /* Remove glow from collapse button in dark mode */
         [data-theme="light"] .collapse-btn {
             box-shadow: 0 2px 10px var(--shadow);
         }
@@ -231,7 +228,6 @@
             line-height: 1;
         }
 
-        /* Remove glow in dark mode */
         [data-theme="light"] .theme-toggle {
             box-shadow: 0 4px 20px var(--shadow);
         }
@@ -274,7 +270,6 @@
             z-index: 999;
         }
 
-        /* Remove glow in dark mode for add button too */
         [data-theme="light"] .add-card-btn {
             box-shadow: 0 4px 20px var(--shadow-hover);
         }
@@ -304,9 +299,29 @@
             text-align: center;
         }
 
-        /* Remove glow from stat cards in dark mode */
         [data-theme="light"] .stat-card {
             box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background: #000000;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        [data-theme="light"] .toast {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .toast {
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
 
         .stat-number {
@@ -337,15 +352,6 @@
             transition: all 0.3s ease;
             cursor: pointer;
             position: relative;
-        }
-
-        /* Remove glow from photocards in dark mode */
-        [data-theme="light"] .photocard {
-            box-shadow: 0 8px 25px var(--shadow);
-        }
-
-        [data-theme="light"] .photocard:hover {
-            box-shadow: 0 15px 35px var(--shadow-hover);
         }
 
         .photocard:hover {
@@ -710,7 +716,6 @@
         </div>
     </div>
 
-    <!-- Theme Toggle Button -->
     <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">🌙</button>
 
     <button class="add-card-btn" id="addBtn" title="add new photocard">+</button>
@@ -796,7 +801,6 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        // Storage functions using IndexedDB for persistent storage
         class PhotocardDB {
             constructor() {
                 this.dbName = 'AespaPhotocardDB';
@@ -852,14 +856,12 @@
             }
         }
 
-        // Main application
         let photocards = [];
         let currentEraFilter = 'all';
         let currentMemberFilter = 'all';
         let selectedImage = null;
         let db = new PhotocardDB();
 
-        // Initialize database and load cards
         async function initApp() {
             try {
                 await db.init();
@@ -873,7 +875,6 @@
             }
         }
 
-        // Theme management
         function initTheme() {
             const savedTheme = localStorage.getItem('aespa-theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
@@ -898,7 +899,6 @@
             }
         }
 
-        // Toast notification
         function showToast(message) {
             const toast = document.getElementById('toast');
             toast.textContent = message;
@@ -906,7 +906,6 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // Image handling functions
         function handleImageSelection(file) {
             if (file && file.type.startsWith('image/')) {
                 const reader = new FileReader();
@@ -942,7 +941,6 @@
             fileInput.value = '';
         }
 
-        // Modal functions
         function openModal() {
             document.getElementById('addCardModal').style.display = 'block';
         }
@@ -953,7 +951,6 @@
             removeImage();
         }
 
-        // CRUD operations
         async function addPhotocard(member, era, type, notes) {
             const newCard = {
                 id: Date.now(),
@@ -993,7 +990,6 @@
             }
         }
 
-        // Display functions
         function updateDisplay() {
             const grid = document.getElementById('photocardGrid');
             const emptyState = document.getElementById('emptyState');
@@ -1055,7 +1051,6 @@
             document.getElementById('completionRate').textContent = completionRate + '%';
         }
 
-        // Export/Import functions
         function exportData() {
             const dataStr = JSON.stringify(photocards, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
@@ -1079,7 +1074,7 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     
-                    if (confirm(`Import ${importedData.length} photocards? This will replace your current collection.`)) {
+                    if (confirm(`import ${importedData.length} photocards? this will replace your current collection`)) {
                         await db.clearAll();
                         photocards = [];
                         
@@ -1093,7 +1088,7 @@
                         showToast(`imported ${importedData.length} photocards!`);
                     }
                 } catch (error) {
-                    console.error('Import error:', error);
+                    console.error('import error:', error);
                     showToast('error importing data');
                 }
             };
@@ -1101,7 +1096,7 @@
         }
 
         async function clearAllData() {
-            if (confirm('Are you sure you want to delete ALL photocards? This cannot be undone!')) {
+            if (confirm('are you sure you want to delete ALL photocards? this cannot be undone!')) {
                 try {
                     await db.clearAll();
                     photocards = [];
@@ -1115,7 +1110,6 @@
             }
         }
 
-        // Header collapse functionality
         function toggleHeader() {
             const header = document.getElementById('header');
             const collapseBtn = document.getElementById('collapseBtn');
@@ -1133,45 +1127,34 @@
             }
         }
 
-        // Initialize everything when page loads
         window.onload = function() {
             console.log('Initializing aespa photocard database...');
             
-            // Initialize theme first
             initTheme();
             
-            // Initialize the database
             initApp();
             
-            // Theme toggle
             document.getElementById('themeToggle').onclick = toggleTheme;
             
-            // Header collapse toggle
             document.getElementById('collapseBtn').onclick = toggleHeader;
             
-            // Add button click
             document.getElementById('addBtn').onclick = openModal;
             
-            // Close button click
             document.getElementById('closeBtn').onclick = closeModal;
             
-            // Utility buttons
             document.getElementById('exportBtn').onclick = exportData;
             document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
             document.getElementById('importFile').onchange = importData;
             document.getElementById('clearBtn').onclick = clearAllData;
             
-            // Drag and drop functionality
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
             const removeImageBtn = document.getElementById('removeImageBtn');
             
-            // Click to browse files
             dropZone.onclick = function() {
                 fileInput.click();
             };
             
-            // File input change
             fileInput.onchange = function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -1179,13 +1162,11 @@
                 }
             };
             
-            // Remove image button
             removeImageBtn.onclick = function(e) {
                 e.stopPropagation();
                 removeImage();
             };
             
-            // Drag and drop events
             dropZone.ondragover = function(e) {
                 e.preventDefault();
                 dropZone.classList.add('dragover');
@@ -1206,7 +1187,6 @@
                 }
             };
             
-            // Form submission
             document.getElementById('addCardForm').onsubmit = function(e) {
                 e.preventDefault();
                 console.log('Form submitted!');
@@ -1223,7 +1203,6 @@
                 }
             };
 
-            // Era filter buttons
             document.querySelectorAll('.era-filter').forEach(button => {
                 button.onclick = function() {
                     currentEraFilter = this.dataset.era;
@@ -1236,7 +1215,6 @@
                 };
             });
 
-            // Member filter buttons
             document.querySelectorAll('.member-filter').forEach(button => {
                 button.onclick = function() {
                     currentMemberFilter = this.dataset.member;
@@ -1249,7 +1227,6 @@
                 };
             });
 
-            // Close modal when clicking outside
             window.onclick = function(e) {
                 const modal = document.getElementById('addCardModal');
                 if (e.target === modal) {
