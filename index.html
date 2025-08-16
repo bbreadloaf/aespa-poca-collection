@@ -29,13 +29,13 @@
             --border-primary: #000000;
             --border-secondary: #e0e0e0;
             --accent-primary: #000000;
-            --accent-hover: #333333;
+            --accent-hover: #4e4e4e;
             --shadow: rgba(0, 0, 0, 0.1);
             --shadow-hover: rgba(0, 0, 0, 0.2);
         }
 
         [data-theme="dark"] {
-            --bg-primary: #0a0a0a;
+            --bg-primary: hsl(0, 0%, 4%);
             --bg-secondary: #1a1a1a;
             --bg-card: #1f1f1f;
             --text-primary: #ffffff;
@@ -44,9 +44,9 @@
             --border-primary: #ffffff;
             --border-secondary: #333333;
             --accent-primary: #ffffff;
-            --accent-hover: #cccccc;
-            --shadow: rgba(0, 0, 0, 0.1);
-            --shadow-hover: rgba(0, 0, 0, 0.2);
+            --accent-hover: #b3b3b3;
+            --shadow: rgba(255, 255, 255, 0.774);
+            --shadow-hover: rgba(255, 255, 255, 0.774); 
         }
 
         .header {
@@ -97,7 +97,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 24px;
             transition: all 0.3s ease;
             color: var(--text-primary);
             line-height: 0;
@@ -392,7 +392,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0;
+            opacity: 100;
             transition: opacity 0.3s ease;
         }
 
@@ -660,9 +660,8 @@
         <div class="container">
             <div class="header-title">
                 <h1>aespa photocard database</h1>
-                <button class="collapse-btn" id="collapseBtn" title="Toggle header">⌄</button>
+                <button class="collapse-btn" id="collapseBtn" title="toggle header">⌄</button>
             </div>
-            
             <div class="header-content" id="headerContent">
                 <p class="subtitle">your complete collection of aespa photocards</p>
                 
@@ -716,7 +715,7 @@
         </div>
     </div>
 
-    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">🌙</button>
+    <button class="theme-toggle" id="themeToggle" title="toggle dark/light mode">🌙</button>
 
     <button class="add-card-btn" id="addBtn" title="add new photocard">+</button>
 
@@ -970,13 +969,13 @@
                 closeModal();
                 showToast(`added ${era} ${member} photocard!`);
             } catch (error) {
-                console.error('Error adding photocard:', error);
+                console.error('error adding photocard:', error);
                 showToast('error adding photocard');
             }
         }
 
         async function deletePhotocard(id) {
-            if (confirm('Are you sure you want to delete this photocard?')) {
+            if (confirm('are you sure you want to delete this photocard?')) {
                 try {
                     await db.deleteCard(id);
                     photocards = photocards.filter(card => card.id !== id);
@@ -984,7 +983,7 @@
                     updateStats();
                     showToast('photocard deleted');
                 } catch (error) {
-                    console.error('Error deleting photocard:', error);
+                    console.error('error deleting photocard:', error);
                     showToast('error deleting photocard');
                 }
             }
