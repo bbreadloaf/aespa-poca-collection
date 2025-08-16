@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aespa photocard database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        /* Light theme variables */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f8f8;
+            --bg-card: #ffffff;
+            --text-primary: #000000;
+            --text-secondary: #333333;
+            --text-muted: #666666;
+            --border-primary: #000000;
+            --border-secondary: #e0e0e0;
+            --accent-primary: #000000;
+            --accent-hover: #333333;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-hover: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Dark theme variables */
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #1f1f1f;
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --border-primary: #ffffff;
+            --border-secondary: #333333;
+            --accent-primary: #ffffff;
+            --accent-hover: #cccccc;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-hover: rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            background: var(--bg-primary);
+            padding: 20px 0;
+            box-shadow: 0 4px 20px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .header.collapsed {
+            padding: 10px 0;
+        }
+
+        .header-content {
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .header.collapsed .header-content {
+            max-height: 0;
+            opacity: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header.collapsed .header-title {
+            margin-bottom: 0;
+        }
+
+        .collapse-btn {
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            line-height: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            box-sizing: border-box;
+            position: relative;
+        }
+        
+        .collapse-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .collapse-btn:hover {
+            transform: scale(1.1);
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+
+        /* Remove glow from collapse button in dark mode */
+        [data-theme="light"] .collapse-btn {
+            box-shadow: 0 2px 10px var(--shadow);
+        }
+
+        [data-theme="light"] .collapse-btn:hover {
+            box-shadow: 0 4px 15px var(--shadow-hover);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .controls.member-controls {
+            margin-bottom: 30px;
+        }
+
+        .era-filter, .member-filter {
+            padding: 10px 20px;
+            border: 2px solid var(--border-primary);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .era-filter:hover, .era-filter.active,
+        .member-filter:hover, .member-filter.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px var(--shadow-hover);
+        }
+
+        .utility-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .utility-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--text-muted);
+            background: var(--bg-primary);
+            color: var(--text-muted);
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .utility-btn:hover {
+            background: var(--text-muted);
+            color: var(--bg-primary);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            line-height: 1;
+        }
+
+        /* Remove glow in dark mode */
+        [data-theme="light"] .theme-toggle {
+            box-shadow: 0 4px 20px var(--shadow);
+        }
+
+        [data-theme="light"] .theme-toggle:hover {
+            box-shadow: 0 6px 25px var(--shadow-hover);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .utility-btn.danger {
+            border-color: #ff4444;
+            color: #ff4444;
+        }
+
+        .utility-btn.danger:hover {
+            background: #ff4444;
+            color: #ffffff;
+        }
+
+        .add-card-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+        }
+
+        /* Remove glow in dark mode for add button too */
+        [data-theme="light"] .add-card-btn {
+            box-shadow: 0 4px 20px var(--shadow-hover);
+        }
+
+        [data-theme="light"] .add-card-btn:hover {
+            box-shadow: 0 6px 25px var(--shadow-hover);
+        }
+
+        .add-card-btn:hover {
+            transform: scale(1.1);
+            background: var(--accent-hover);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            padding: 15px 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        /* Remove glow from stat cards in dark mode */
+        [data-theme="light"] .stat-card {
+            box-shadow: 0 4px 15px var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .photocard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .photocard {
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        /* Remove glow from photocards in dark mode */
+        [data-theme="light"] .photocard {
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+
+        [data-theme="light"] .photocard:hover {
+            box-shadow: 0 15px 35px var(--shadow-hover);
+        }
+
+        .photocard:hover {
+            transform: translateY(-10px);
+        }
+
+        .photocard-image {
+            width: 100%;
+            height: 250px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photocard-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .photocard:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background: rgba(255, 68, 68, 1);
+            transform: scale(1.1);
+        }
+
+        .photocard-info {
+            padding: 15px;
+        }
+
+        .member-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .era-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .photocard-type {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            margin: 3% auto;
+            padding: 30px;
+            border: 2px solid var(--border-primary);
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .close:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-secondary);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--border-primary);
+        }
+
+        .image-drop-zone {
+            border: 3px dashed var(--border-primary);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            background: var(--bg-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-drop-zone:hover {
+            background: var(--bg-card);
+            border-color: var(--accent-hover);
+        }
+
+        .image-drop-zone.dragover {
+            background: var(--bg-card);
+            border-color: var(--accent-primary);
+            transform: scale(1.02);
+        }
+
+        .drop-zone-text {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .drop-zone-subtext {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .remove-image-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .remove-image-btn:hover {
+            background: #cc3333;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #000000;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            background: #333333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #333333;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            opacity: 0.7;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background: #000000;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .controls, .utility-buttons {
+                justify-content: center;
+            }
+            
+            .era-filter, .member-filter, .utility-btn {
+                font-size: 0.8rem;
+                padding: 8px 16px;
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+            
+            .stat-card {
+                padding: 12px 20px;
+            }
+            
+            .photocard-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .image-drop-zone {
+                padding: 20px;
+                min-height: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header" id="header">
+        <div class="container">
+            <div class="header-title">
+                <h1>aespa photocard database</h1>
+                <button class="collapse-btn" id="collapseBtn" title="Toggle header">⌄</button>
+            </div>
+            
+            <div class="header-content" id="headerContent">
+                <p class="subtitle">your complete collection of aespa photocards</p>
+                
+                <div class="controls">
+                    <button class="era-filter active" data-era="all">all eras</button>
+                    <button class="era-filter" data-era="black mamba">black mamba</button>
+                    <button class="era-filter" data-era="next level">next level</button>
+                    <button class="era-filter" data-era="savage">savage</button>
+                    <button class="era-filter" data-era="girls">girls</button>
+                    <button class="era-filter" data-era="my world">my world</button>
+                </div>
+                
+                <div class="controls">
+                    <button class="era-filter" data-era="drama">drama</button>
+                    <button class="era-filter" data-era="supernova">supernova</button>
+                    <button class="era-filter" data-era="armageddon">armageddon</button>
+                    <button class="era-filter" data-era="whiplash">whiplash</button>
+                    <button class="era-filter" data-era="dirty work">dirty work</button>
+                </div>
+                
+                <div class="controls member-controls">
+                    <button class="member-filter active" data-member="all">all members</button>
+                    <button class="member-filter" data-member="karina">karina</button>
+                    <button class="member-filter" data-member="giselle">giselle</button>
+                    <button class="member-filter" data-member="winter">winter</button>
+                    <button class="member-filter" data-member="ningning">ningning</button>
+                </div>
+
+                <div class="utility-buttons">
+                    <button class="utility-btn" id="exportBtn">export data</button>
+                    <button class="utility-btn" id="importBtn">import data</button>
+                    <button class="utility-btn danger" id="clearBtn">clear all</button>
+                </div>
+                <input type="file" id="importFile" accept=".json" style="display: none;">
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalCards">0</span>
+                        <div class="stat-label">total cards</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="totalEras">0</span>
+                        <div class="stat-label">eras</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-number" id="completionRate">0%</span>
+                        <div class="stat-label">collection rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" id="themeToggle" title="Toggle dark/light mode">🌙</button>
+
+    <button class="add-card-btn" id="addBtn" title="add new photocard">+</button>
+
+    <div class="container">
+        <div class="photocard-grid" id="photocardGrid"></div>
+        
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h3>no photocards found</h3>
+            <p>start building your collection by adding some photocards!</p>
+        </div>
+    </div>
+
+    <div id="addCardModal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="closeBtn">&times;</span>
+            <h2 style="margin-bottom: 20px; color: var(--text-primary);">add new photocard</h2>
+            <form id="addCardForm">
+                <div class="form-group">
+                    <label for="memberName">member name</label>
+                    <select id="memberName" required>
+                        <option value="">select member</option>
+                        <option value="karina">karina</option>
+                        <option value="giselle">giselle</option>
+                        <option value="winter">winter</option>
+                        <option value="ningning">ningning</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="era">era</label>
+                    <select id="era" required>
+                        <option value="">select era</option>
+                        <option value="black mamba">black mamba</option>
+                        <option value="next level">next level</option>
+                        <option value="savage">savage</option>
+                        <option value="girls">girls</option>
+                        <option value="my world">my world</option>
+                        <option value="drama">drama</option>
+                        <option value="supernova">supernova</option>
+                        <option value="armageddon">armageddon</option>
+                        <option value="whiplash">whiplash</option>
+                        <option value="dirty work">dirty work</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cardType">card type</label>
+                    <select id="cardType" required>
+                        <option value="">select type</option>
+                        <option value="official">official</option>
+                        <option value="pob">pob (pre-order benefit)</option>
+                        <option value="lucky draw">lucky draw</option>
+                        <option value="broadcast">broadcast</option>
+                        <option value="event">event</option>
+                        <option value="limited edition">limited edition</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>photocard image</label>
+                    <div class="image-drop-zone" id="dropZone">
+                        <img class="image-preview" id="imagePreview" alt="Preview">
+                        <div class="drop-zone-content" id="dropZoneContent">
+                            <div class="drop-zone-text">drag & drop your image here</div>
+                            <div class="drop-zone-subtext">or click to browse files</div>
+                        </div>
+                        <button type="button" class="remove-image-btn" id="removeImageBtn">remove image</button>
+                    </div>
+                    <input type="file" class="file-input" id="fileInput" accept="image/*">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">notes (optional)</label>
+                    <input type="text" id="notes" placeholder="any additional notes...">
+                </div>
+                
+                <button type="submit" class="submit-btn">add photocard</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Storage functions using IndexedDB for persistent storage
+        class PhotocardDB {
+            constructor() {
+                this.dbName = 'AespaPhotocardDB';
+                this.version = 1;
+                this.db = null;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+                    
+                    request.onerror = () => reject(request.error);
+                    request.onsuccess = () => {
+                        this.db = request.result;
+                        resolve(this.db);
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        if (!db.objectStoreNames.contains('photocards')) {
+                            db.createObjectStore('photocards', { keyPath: 'id' });
+                        }
+                    };
+                });
+            }
+
+            async addCard(card) {
+                const transaction = this.db.transaction(['photocards'], 'readwrite');
+                const store = transaction.objectStore('photocards');
+                return store.add(card);
+            }
+
+            async getAllCards() {
+                const transaction = this.db.transaction(['photocards'], 'readonly');
+                const store = transaction.objectStore('photocards');
+                return new Promise((resolve, reject) => {
+                    const request = store.getAll();
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = () => reject(request.error);
+                });
+            }
+
+            async deleteCard(id) {
+                const transaction = this.db.transaction(['photocards'], 'readwrite');
+                const store = transaction.objectStore('photocards');
+                return store.delete(id);
+            }
+
+            async clearAll() {
+                const transaction = this.db.transaction(['photocards'], 'readwrite');
+                const store = transaction.objectStore('photocards');
+                return store.clear();
+            }
+        }
+
+        // Main application
+        let photocards = [];
+        let currentEraFilter = 'all';
+        let currentMemberFilter = 'all';
+        let selectedImage = null;
+        let db = new PhotocardDB();
+
+        // Initialize database and load cards
+        async function initApp() {
+            try {
+                await db.init();
+                photocards = await db.getAllCards();
+                updateDisplay();
+                updateStats();
+                showToast('database loaded successfully!');
+            } catch (error) {
+                console.error('Failed to initialize database:', error);
+                showToast('error loading database');
+            }
+        }
+
+        // Theme management
+        function initTheme() {
+            const savedTheme = localStorage.getItem('aespa-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('aespa-theme', newTheme);
+            updateThemeIcon(newTheme);
+            
+            showToast(`switched to ${newTheme} mode!`);
+        }
+
+        function updateThemeIcon(theme) {
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+        }
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Image handling functions
+        function handleImageSelection(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImage = e.target.result;
+                    showImagePreview(selectedImage);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showImagePreview(imageSrc) {
+            const preview = document.getElementById('imagePreview');
+            const content = document.getElementById('dropZoneContent');
+            const removeBtn = document.getElementById('removeImageBtn');
+            
+            preview.src = imageSrc;
+            preview.style.display = 'block';
+            content.style.display = 'none';
+            removeBtn.style.display = 'block';
+        }
+
+        function removeImage() {
+            selectedImage = null;
+            const preview = document.getElementById('imagePreview');
+            const content = document.getElementById('dropZoneContent');
+            const removeBtn = document.getElementById('removeImageBtn');
+            const fileInput = document.getElementById('fileInput');
+            
+            preview.style.display = 'none';
+            content.style.display = 'block';
+            removeBtn.style.display = 'none';
+            fileInput.value = '';
+        }
+
+        // Modal functions
+        function openModal() {
+            document.getElementById('addCardModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('addCardModal').style.display = 'none';
+            document.getElementById('addCardForm').reset();
+            removeImage();
+        }
+
+        // CRUD operations
+        async function addPhotocard(member, era, type, notes) {
+            const newCard = {
+                id: Date.now(),
+                member: member,
+                era: era,
+                type: type,
+                image: selectedImage || '',
+                notes: notes || '',
+                dateAdded: new Date().toISOString()
+            };
+            
+            try {
+                await db.addCard(newCard);
+                photocards.push(newCard);
+                updateDisplay();
+                updateStats();
+                closeModal();
+                showToast(`added ${era} ${member} photocard!`);
+            } catch (error) {
+                console.error('Error adding photocard:', error);
+                showToast('error adding photocard');
+            }
+        }
+
+        async function deletePhotocard(id) {
+            if (confirm('Are you sure you want to delete this photocard?')) {
+                try {
+                    await db.deleteCard(id);
+                    photocards = photocards.filter(card => card.id !== id);
+                    updateDisplay();
+                    updateStats();
+                    showToast('photocard deleted');
+                } catch (error) {
+                    console.error('Error deleting photocard:', error);
+                    showToast('error deleting photocard');
+                }
+            }
+        }
+
+        // Display functions
+        function updateDisplay() {
+            const grid = document.getElementById('photocardGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            let filteredCards = photocards;
+            
+            if (currentEraFilter !== 'all') {
+                filteredCards = filteredCards.filter(card => card.era === currentEraFilter);
+            }
+            
+            if (currentMemberFilter !== 'all') {
+                filteredCards = filteredCards.filter(card => card.member === currentMemberFilter);
+            }
+            
+            if (filteredCards.length === 0) {
+                grid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            grid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            
+            grid.innerHTML = filteredCards.map(card => `
+                <div class="photocard">
+                    <button class="delete-btn" onclick="deletePhotocard(${card.id})" title="Delete photocard">×</button>
+                    <div class="photocard-image">
+                        ${card.image ? 
+                            `<img src="${card.image}" alt="${card.member} - ${card.era}">` : 
+                            `<div>📸 ${card.member}</div>`
+                        }
+                    </div>
+                    <div class="photocard-info">
+                        <div class="member-name">${card.member}</div>
+                        <div class="era-tag">${card.era}</div>
+                        <div class="photocard-type">${card.type}</div>
+                        ${card.notes ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 5px;">${card.notes}</div>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            let displayedCards = photocards;
+            
+            if (currentEraFilter !== 'all') {
+                displayedCards = displayedCards.filter(card => card.era === currentEraFilter);
+            }
+            if (currentMemberFilter !== 'all') {
+                displayedCards = displayedCards.filter(card => card.member === currentMemberFilter);
+            }
+            
+            const totalCards = displayedCards.length;
+            const totalEras = new Set(displayedCards.map(card => card.era)).size;
+            const completionRate = totalCards > 0 ? Math.round((totalCards / 500) * 100) : 0;
+            
+            document.getElementById('totalCards').textContent = totalCards;
+            document.getElementById('totalEras').textContent = totalEras;
+            document.getElementById('completionRate').textContent = completionRate + '%';
+        }
+
+        // Export/Import functions
+        function exportData() {
+            const dataStr = JSON.stringify(photocards, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `aespa-photocards-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            showToast('data exported successfully!');
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    
+                    if (confirm(`Import ${importedData.length} photocards? This will replace your current collection.`)) {
+                        await db.clearAll();
+                        photocards = [];
+                        
+                        for (const card of importedData) {
+                            await db.addCard(card);
+                            photocards.push(card);
+                        }
+                        
+                        updateDisplay();
+                        updateStats();
+                        showToast(`imported ${importedData.length} photocards!`);
+                    }
+                } catch (error) {
+                    console.error('Import error:', error);
+                    showToast('error importing data');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function clearAllData() {
+            if (confirm('Are you sure you want to delete ALL photocards? This cannot be undone!')) {
+                try {
+                    await db.clearAll();
+                    photocards = [];
+                    updateDisplay();
+                    updateStats();
+                    showToast('all data cleared!');
+                } catch (error) {
+                    console.error('Error clearing data:', error);
+                    showToast('error clearing data');
+                }
+            }
+        }
+
+        // Header collapse functionality
+        function toggleHeader() {
+            const header = document.getElementById('header');
+            const collapseBtn = document.getElementById('collapseBtn');
+            
+            header.classList.toggle('collapsed');
+            
+            if (header.classList.contains('collapsed')) {
+                collapseBtn.innerHTML = '⌄';
+                collapseBtn.title = 'expand header';
+                showToast('header collapsed!');
+            } else {
+                collapseBtn.innerHTML = '⌃';
+                collapseBtn.title = 'collapse header';
+                showToast('header expanded!');
+            }
+        }
+
+        // Initialize everything when page loads
+        window.onload = function() {
+            console.log('Initializing aespa photocard database...');
+            
+            // Initialize theme first
+            initTheme();
+            
+            // Initialize the database
+            initApp();
+            
+            // Theme toggle
+            document.getElementById('themeToggle').onclick = toggleTheme;
+            
+            // Header collapse toggle
+            document.getElementById('collapseBtn').onclick = toggleHeader;
+            
+            // Add button click
+            document.getElementById('addBtn').onclick = openModal;
+            
+            // Close button click
+            document.getElementById('closeBtn').onclick = closeModal;
+            
+            // Utility buttons
+            document.getElementById('exportBtn').onclick = exportData;
+            document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
+            document.getElementById('importFile').onchange = importData;
+            document.getElementById('clearBtn').onclick = clearAllData;
+            
+            // Drag and drop functionality
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            const removeImageBtn = document.getElementById('removeImageBtn');
+            
+            // Click to browse files
+            dropZone.onclick = function() {
+                fileInput.click();
+            };
+            
+            // File input change
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleImageSelection(file);
+                }
+            };
+            
+            // Remove image button
+            removeImageBtn.onclick = function(e) {
+                e.stopPropagation();
+                removeImage();
+            };
+            
+            // Drag and drop events
+            dropZone.ondragover = function(e) {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            };
+            
+            dropZone.ondragleave = function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+            };
+            
+            dropZone.ondrop = function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleImageSelection(file);
+                }
+            };
+            
+            // Form submission
+            document.getElementById('addCardForm').onsubmit = function(e) {
+                e.preventDefault();
+                console.log('Form submitted!');
+                
+                const member = document.getElementById('memberName').value;
+                const era = document.getElementById('era').value;
+                const type = document.getElementById('cardType').value;
+                const notes = document.getElementById('notes').value;
+                
+                if (member && era && type) {
+                    addPhotocard(member, era, type, notes);
+                } else {
+                    alert('Please fill in all required fields!');
+                }
+            };
+
+            // Era filter buttons
+            document.querySelectorAll('.era-filter').forEach(button => {
+                button.onclick = function() {
+                    currentEraFilter = this.dataset.era;
+                    
+                    document.querySelectorAll('.era-filter').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    updateDisplay();
+                    updateStats();
+                };
+            });
+
+            // Member filter buttons
+            document.querySelectorAll('.member-filter').forEach(button => {
+                button.onclick = function() {
+                    currentMemberFilter = this.dataset.member;
+                    
+                    document.querySelectorAll('.member-filter').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    updateDisplay();
+                    updateStats();
+                };
+            });
+
+            // Close modal when clicking outside
+            window.onclick = function(e) {
+                const modal = document.getElementById('addCardModal');
+                if (e.target === modal) {
+                    closeModal();
+                }
+            };
+
+            console.log('Setup complete!');
+        };
+    </script>
+</body>
+</html>
