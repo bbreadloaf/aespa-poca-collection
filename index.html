@@ -377,34 +377,6 @@
             object-fit: cover;
         }
 
-        .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 68, 68, 0.9);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 100;
-            transition: opacity 0.3s ease;
-        }
-
-        .photocard:hover .delete-btn {
-            opacity: 1;
-        }
-
-        .delete-btn:hover {
-            background: rgba(255, 68, 68, 1);
-            transform: scale(1.1);
-        }
-
         .photocard-info {
             padding: 15px;
         }
@@ -430,6 +402,72 @@
         .photocard-type {
             color: var(--text-secondary);
             font-size: 0.9rem;
+        }
+
+        /* Context Menu Styles */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-card);
+            border: 2px solid var(--border-primary);
+            border-radius: 10px;
+            padding: 8px 0;
+            min-width: 150px;
+            z-index: 1500;
+            display: none;
+            transform: scale(0.8);
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .context-menu.show {
+            display: block;
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        [data-theme="light"] .context-menu {
+            box-shadow: 0 8px 30px var(--shadow-hover);
+        }
+
+        [data-theme="dark"] .context-menu {
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        .context-menu-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .context-menu-item.danger {
+            color: #ff4444;
+        }
+
+        .context-menu-item.danger:hover {
+            background: rgba(255, 68, 68, 0.1);
+        }
+
+        .context-menu-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .modal {
@@ -728,10 +766,21 @@
         </div>
     </div>
 
+    <div id="contextMenu" class="context-menu">
+        <button class="context-menu-item" id="editCard">
+            <span class="context-menu-icon"></span> 
+                edit card
+        </button>
+        <button class="context-menu-item danger" id="deleteCard">
+            <span class="context-menu-icon"></span> 
+                delete card
+        </button>
+    </div>
+
     <div id="addCardModal" class="modal">
         <div class="modal-content">
             <span class="close" id="closeBtn">&times;</span>
-            <h2 style="margin-bottom: 20px; color: var(--text-primary);">add new photocard</h2>
+            <h2 style="margin-bottom: 20px; color: var(--text-primary);" id="modalTitle">add new photocard</h2>
             <form id="addCardForm">
                 <div class="form-group">
                     <label for="memberName">member name</label>
@@ -792,7 +841,7 @@
                     <input type="text" id="notes" placeholder="any additional notes...">
                 </div>
                 
-                <button type="submit" class="submit-btn">add photocard</button>
+                <button type="submit" class="submit-btn" id="submitBtn">add photocard</button>
             </form>
         </div>
     </div>
@@ -842,6 +891,12 @@
                 });
             }
 
+            async updateCard(card) {
+                const transaction = this.db.transaction(['photocards'], 'readwrite');
+                const store = transaction.objectStore('photocards');
+                return store.put(card);
+            }
+
             async deleteCard(id) {
                 const transaction = this.db.transaction(['photocards'], 'readwrite');
                 const store = transaction.objectStore('photocards');
@@ -860,6 +915,7 @@
         let currentMemberFilter = 'all';
         let selectedImage = null;
         let db = new PhotocardDB();
+        let currentEditingCard = null;
 
         async function initApp() {
             try {
@@ -940,37 +996,92 @@
             fileInput.value = '';
         }
 
-        function openModal() {
-            document.getElementById('addCardModal').style.display = 'block';
+        function openModal(editCard = null) {
+            const modal = document.getElementById('addCardModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (editCard) {
+                currentEditingCard = editCard;
+                modalTitle.textContent = 'edit photocard';
+                submitBtn.textContent = 'update photocard';
+                
+                // Pre-fill form with existing data
+                document.getElementById('memberName').value = editCard.member;
+                document.getElementById('era').value = editCard.era;
+                document.getElementById('cardType').value = editCard.type;
+                document.getElementById('notes').value = editCard.notes || '';
+                
+                if (editCard.image) {
+                    selectedImage = editCard.image;
+                    showImagePreview(editCard.image);
+                }
+            } else {
+                currentEditingCard = null;
+                modalTitle.textContent = 'add new photocard';
+                submitBtn.textContent = 'add photocard';
+            }
+            
+            modal.style.display = 'block';
         }
 
         function closeModal() {
             document.getElementById('addCardModal').style.display = 'none';
             document.getElementById('addCardForm').reset();
             removeImage();
+            currentEditingCard = null;
         }
 
         async function addPhotocard(member, era, type, notes) {
-            const newCard = {
-                id: Date.now(),
-                member: member,
-                era: era,
-                type: type,
-                image: selectedImage || '',
-                notes: notes || '',
-                dateAdded: new Date().toISOString()
-            };
-            
-            try {
-                await db.addCard(newCard);
-                photocards.push(newCard);
-                updateDisplay();
-                updateStats();
-                closeModal();
-                showToast(`added ${era} ${member} photocard!`);
-            } catch (error) {
-                console.error('error adding photocard:', error);
-                showToast('error adding photocard');
+            if (currentEditingCard) {
+                // Update existing card
+                const updatedCard = {
+                    ...currentEditingCard,
+                    member: member,
+                    era: era,
+                    type: type,
+                    image: selectedImage || currentEditingCard.image,
+                    notes: notes || '',
+                    dateModified: new Date().toISOString()
+                };
+                
+                try {
+                    await db.updateCard(updatedCard);
+                    const index = photocards.findIndex(card => card.id === updatedCard.id);
+                    if (index !== -1) {
+                        photocards[index] = updatedCard;
+                    }
+                    updateDisplay();
+                    updateStats();
+                    closeModal();
+                    showToast(`updated ${era} ${member} photocard!`);
+                } catch (error) {
+                    console.error('error updating photocard:', error);
+                    showToast('error updating photocard');
+                }
+            } else {
+                // Add new card
+                const newCard = {
+                    id: Date.now(),
+                    member: member,
+                    era: era,
+                    type: type,
+                    image: selectedImage || '',
+                    notes: notes || '',
+                    dateAdded: new Date().toISOString()
+                };
+                
+                try {
+                    await db.addCard(newCard);
+                    photocards.push(newCard);
+                    updateDisplay();
+                    updateStats();
+                    closeModal();
+                    showToast(`added ${era} ${member} photocard!`);
+                } catch (error) {
+                    console.error('error adding photocard:', error);
+                    showToast('error adding photocard');
+                }
             }
         }
 
@@ -987,6 +1098,55 @@
                     showToast('error deleting photocard');
                 }
             }
+        }
+
+        function showContextMenu(event, cardId) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const contextMenu = document.getElementById('contextMenu');
+            const card = photocards.find(c => c.id === cardId);
+            
+            if (!card) return;
+            
+            // Position context menu
+            const x = event.clientX;
+            const y = event.clientY;
+            
+            // Ensure menu doesn't go off screen
+            const menuWidth = 150;
+            const menuHeight = 80;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            
+            let adjustedX = x;
+            let adjustedY = y;
+            
+            if (x + menuWidth > viewportWidth) {
+                adjustedX = x - menuWidth;
+            }
+            
+            if (y + menuHeight > viewportHeight) {
+                adjustedY = y - menuHeight;
+            }
+            
+            contextMenu.style.left = adjustedX + 'px';
+            contextMenu.style.top = adjustedY + 'px';
+            contextMenu.classList.add('show');
+            
+            // Store current card ID for menu actions
+            contextMenu.dataset.cardId = cardId;
+            
+            // Hide menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', hideContextMenu);
+            }, 100);
+        }
+
+        function hideContextMenu() {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.classList.remove('show');
+            document.removeEventListener('click', hideContextMenu);
         }
 
         function updateDisplay() {
@@ -1013,8 +1173,7 @@
             emptyState.style.display = 'none';
             
             grid.innerHTML = filteredCards.map(card => `
-                <div class="photocard">
-                    <button class="delete-btn" onclick="deletePhotocard(${card.id})" title="Delete photocard">×</button>
+                <div class="photocard" onclick="showContextMenu(event, ${card.id})">
                     <div class="photocard-image">
                         ${card.image ? 
                             `<img src="${card.image}" alt="${card.member} - ${card.era}">` : 
@@ -1137,7 +1296,7 @@
             
             document.getElementById('collapseBtn').onclick = toggleHeader;
             
-            document.getElementById('addBtn').onclick = openModal;
+            document.getElementById('addBtn').onclick = () => openModal();
             
             document.getElementById('closeBtn').onclick = closeModal;
             
@@ -1145,6 +1304,21 @@
             document.getElementById('importBtn').onclick = () => document.getElementById('importFile').click();
             document.getElementById('importFile').onchange = importData;
             document.getElementById('clearBtn').onclick = clearAllData;
+            
+            document.getElementById('editCard').onclick = function() {
+                const cardId = parseInt(document.getElementById('contextMenu').dataset.cardId);
+                const card = photocards.find(c => c.id === cardId);
+                if (card) {
+                    hideContextMenu();
+                    openModal(card);
+                }
+            };
+            
+            document.getElementById('deleteCard').onclick = function() {
+                const cardId = parseInt(document.getElementById('contextMenu').dataset.cardId);
+                hideContextMenu();
+                deletePhotocard(cardId);
+            };
             
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
